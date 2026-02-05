@@ -34,10 +34,10 @@ const getRecipes = async (req, res) => {
   }
 };
 
-
+// Search recipes with filters and pagination
 const searchRecipes = async (req, res) => {
   try {
-    const { calories, title, cuisine, total_time, rating } = req.query;
+    const { calories, title, cuisine, total_time, rating, page = 1, limit = 15 } = req.query;
     
     let query = {};
 
@@ -73,7 +73,7 @@ const searchRecipes = async (req, res) => {
       if (caloriesQuery) {
         // Extract numeric value from calories string in nutrients.calories
         // We need to use aggregation for this
-        const recipes = await Recipe.aggregate([
+        const aggregationPipeline = [
           {
             $match: query
           },
@@ -104,22 +104,48 @@ const searchRecipes = async (req, res) => {
               caloriesValue: 0
             }
           }
+        ];
+
+        // Get total count for pagination
+        const countResult = await Recipe.aggregate([
+          ...aggregationPipeline,
+          { $count: 'total' }
+        ]);
+        const total = countResult.length > 0 ? countResult[0].total : 0;
+
+        // Get paginated results
+        const recipes = await Recipe.aggregate([
+          ...aggregationPipeline,
+          { $sort: { rating: -1 } },
+          { $skip: (page - 1) * limit },
+          { $limit: parseInt(limit) }
         ]);
 
         return res.json({
           success: true,
           count: recipes.length,
+          total: total,
+          page: parseInt(page),
+          totalPages: Math.ceil(total / limit),
           data: recipes
         });
       }
     }
 
-    // Execute query
-    const recipes = await Recipe.find(query).lean();
+    // Execute query with pagination
+    const total = await Recipe.countDocuments(query);
+    const recipes = await Recipe.find(query)
+      .sort({ rating: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
 
     res.json({
       success: true,
       count: recipes.length,
+      total: total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
       data: recipes
     });
   } catch (error) {
