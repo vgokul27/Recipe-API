@@ -43,7 +43,7 @@ const RecipeDrawer = ({ recipe, isOpen, onClose }) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-gray-900 shadow-2xl z-50 overflow-y-auto border-l border-gray-800"
+            className="fixed left-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-gray-900 shadow-2xl z-50 overflow-y-auto border-l border-gray-800"
           >
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6 shadow-lg z-10 border-b border-gray-700">
